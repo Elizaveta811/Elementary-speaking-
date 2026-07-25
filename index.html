@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Interactive lesson template</title>
+  <title>Time zones – interactive lesson</title>
   <style>
     body {
       margin: 0;
@@ -45,6 +45,28 @@
       font-weight: 600;
       margin-bottom: .5rem;
     }
+    #gpClock {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .75rem;
+    }
+    .gp-clock-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid #01696f;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #01696f;
+      background: #ffffff;
+    }
+    .gp-clock-caption {
+      font-size: 0.85rem;
+      color: #555;
+    }
     .gp-options {
       display: flex;
       flex-wrap: wrap;
@@ -52,24 +74,37 @@
       margin-bottom: .75rem;
     }
     .gp-option {
-      padding: .5rem .9rem;
-      border-radius: .6rem;
+      padding: .6rem 1.1rem;
+      border-radius: .8rem;
       border: 1px solid #ccc;
       background: #faf9f6;
       cursor: pointer;
+      font-weight: 500;
+      transition: background 150ms ease, border-color 150ms ease, transform 120ms ease, color 150ms ease;
+    }
+    .gp-option:hover {
+      transform: translateY(-1px);
+      border-color: #01696f;
+    }
+    .gp-option.selected {
+      background: #ffe6c2;
+      border-color: #cc7a00;
+      color: #5b3800;
     }
     .gp-option.correct {
-      background: #d3f4ce;
-      border-color: #5a9a4a;
+      background: #e0f5e0;
+      border-color: #3c8a3c;
+      color: #184218;
     }
     .gp-option.wrong {
-      background: #fbe0d6;
+      background: #f9d7cf;
       border-color: #c1522c;
+      color: #5c2416;
     }
     .gp-feedback {
       font-size: 0.9rem;
       color: #555;
-      min-height: 1.2rem;
+      min-height: 1.4rem;
     }
 
     /* Main game */
@@ -116,6 +151,8 @@
       background: #f7f6f2;
       cursor: pointer;
       user-select: none;
+      font-size: 0.95rem;
+      transition: background 150ms ease, border-color 150ms ease;
     }
     .chip-selectable.selected {
       background: #01696f;
@@ -135,6 +172,7 @@
       background: #01696f;
       color: #fff;
       cursor: pointer;
+      font-size: 0.95rem;
     }
     button.secondary {
       border-color: #aaa;
@@ -144,7 +182,7 @@
     .game-feedback {
       font-size: 0.9rem;
       color: #555;
-      min-height: 1.2rem;
+      min-height: 1.4rem;
     }
 
     /* Right column – speaking prompts */
@@ -160,6 +198,12 @@
     .speaking-list li {
       margin-bottom: .2rem;
     }
+
+    @media (max-width: 800px) {
+      .game-main {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -169,6 +213,7 @@
   <!-- GUIDED PRACTICE -->
   <div class="card">
     <div class="gp-question" id="gpQuestion"></div>
+    <div id="gpClock"></div>
     <div class="gp-options" id="gpOptions"></div>
     <div class="gp-feedback" id="gpFeedback"></div>
   </div>
@@ -208,11 +253,9 @@
   </div>
 
   <script>
-    /* ========= 1. КОНФИГ: сюда подставляешь ИМЕННО МЕНЯЮЩИЕСЯ ДАННЫЕ ========= */
+    /* ========= 1. КОНФИГ: данные для Time zones ========= */
 
-    // A. Мета‑информация урока
     const lessonMeta = {
-      // меняешь под конкретную игру
       title: "Time zones – What's the time?",
       type: "Type of activity: small groups · information gap",
       func: "Function: asking and telling the time",
@@ -228,57 +271,54 @@
       ]
     };
 
-    // B. Guided practice задачи (меняешь содержимое массива)
+    // Guided practice: каждая задача с вопросом, вариантами и «картинкой» часов
     const guidedPracticeItems = [
       {
-        // вопрос
         question: "It's 4:00 in Sydney. What time is it in London?",
-        // варианты
         options: ["2:00", "6:00", "10:00"],
-        // индекс правильного варианта
         correctIndex: 1,
-        // комментарий при верном ответе
         correctFeedback: "Yes. London is ten hours behind Sydney.",
-        // комментарий при неверном
-        wrongFeedback: "Not quite. Remember: London is ten hours behind Sydney."
+        wrongFeedback: "Not quite. Remember: London is ten hours behind Sydney.",
+        clock: "4:00 Sydney"
       },
       {
         question: "It's 6:00 in Tokyo. What time is it in Sydney?",
         options: ["5:00", "7:00", "9:00"],
         correctIndex: 1,
         correctFeedback: "Right. Sydney is one hour ahead of Tokyo.",
-        wrongFeedback: "Check the rule: Sydney is one hour ahead of Tokyo."
+        wrongFeedback: "Check the rule: Sydney is one hour ahead of Tokyo.",
+        clock: "6:00 Tokyo"
       }
-      // добавляешь ещё задания по тому же шаблону
     ];
 
-    // C. Основные игровые карточки для word order (меняешь target/chunks/context)
+    // Основная игра: word order для вопросов о времени
     const gameItems = [
       {
-        // контекст (например, семья или базовое время)
         context: "Tokyo 6:00; Sydney is one hour ahead; London is ten hours behind Sydney.",
-        // модельный вопрос (что ученики должны собрать)
         target: "What time is it in London?",
-        // набор «кусочков» в неправильном порядке
-        chunks: ["What", "is it", "London?", "time", "in"]
+        chunks: ["What", "time", "is it", "in London?"]
       },
       {
         context: "Sydney 4:00; London is ten hours behind Sydney.",
         target: "What time is it in London?",
-        chunks: ["time", "What", "in London?", "is it"]
+        chunks: ["What", "time", "is it", "in London?"]
+      },
+      {
+        context: "London 9:00; New York is five hours behind London.",
+        target: "What time is it in New York?",
+        chunks: ["What", "time", "is it", "in New York?"]
       }
-      // для Seven families, Glasses и т.д. тут будут другие target/chunks/context
     ];
 
-    // D. Спикинг‑подсказки (меняешь на свои)
     const speakingPrompts = [
       "Ask your partner: What time is it in Moscow?",
       "Ask: What time is it in Tokyo / Sydney now?",
       "Compare two cities: Where is it earlier / later?",
-      "Ask and answer 3 real time questions."
+      "Ask and answer 3 real time questions with your classmate."
     ];
 
-    /* ========= 2. РЕНДЕР ИНТРО КАРТОЧКИ ========= */
+    /* ========= 2. РЕНДЕР ИНТРО ========= */
+
     function renderIntro() {
       const el = document.getElementById("introCard");
       el.innerHTML = `
@@ -294,12 +334,22 @@
       `;
     }
 
-    /* ========= 3. GUIDED PRACTICE ЛОГИКА ========= */
+    /* ========= 3. GUIDED PRACTICE ========= */
+
     let gpIndex = 0;
 
     function renderGuidedPractice() {
       const item = guidedPracticeItems[gpIndex];
       document.getElementById("gpQuestion").textContent = item.question;
+
+      // визуальные часы
+      const clockBox = document.getElementById("gpClock");
+      const timeText = item.clock.split(" ")[0]; // например "4:00"
+      clockBox.innerHTML = `
+        <div class="gp-clock-img">${timeText}</div>
+        <div class="gp-clock-caption">${item.clock}</div>
+      `;
+
       const box = document.getElementById("gpOptions");
       box.innerHTML = "";
       const feedback = document.getElementById("gpFeedback");
@@ -310,14 +360,20 @@
         btn.className = "gp-option";
         btn.textContent = opt;
         btn.onclick = () => {
-          // очистить стили
+          // снять предыдущую подсветку
           [...box.querySelectorAll(".gp-option")].forEach(b => {
-            b.classList.remove("correct", "wrong");
+            b.classList.remove("selected", "correct", "wrong");
           });
+          // показать выбранную
+          btn.classList.add("selected");
+
+          // сразу проверяем
           if (i === item.correctIndex) {
+            btn.classList.remove("selected");
             btn.classList.add("correct");
             feedback.textContent = item.correctFeedback;
           } else {
+            btn.classList.remove("selected");
             btn.classList.add("wrong");
             feedback.textContent = item.wrongFeedback;
           }
@@ -326,7 +382,8 @@
       });
     }
 
-    /* ========= 4. MAIN GAME – WORD ORDER ЛОГИКА ========= */
+    /* ========= 4. MAIN GAME – WORD ORDER ========= */
+
     let gameIndex = 0;
 
     function renderGame() {
@@ -337,7 +394,7 @@
         `Round ${gameIndex + 1} of ${gameItems.length}`;
 
       document.getElementById("mainPrompt").textContent =
-        "Reorder the chunks to make a correct question.";
+        "Reorder the chunks to make a correct question about the time.";
       document.getElementById("mainContext").textContent = item.context;
 
       const chunksBox = document.getElementById("gameChunks");
@@ -396,7 +453,8 @@
       };
     }
 
-    /* ========= 5. СПИКИНГ ПОДСКАЗКИ ========= */
+    /* ========= 5. SPEAKING PROMPTS ========= */
+
     function renderSpeaking() {
       const ul = document.getElementById("speakingList");
       ul.innerHTML = speakingPrompts
@@ -404,7 +462,8 @@
         .join("");
     }
 
-    /* ========= 6. ИНИЦИАЛИЗАЦИЯ ========= */
+    /* ========= 6. INIT ========= */
+
     renderIntro();
     renderGuidedPractice();
     renderGame();
