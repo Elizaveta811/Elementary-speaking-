@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interactive lesson template</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 2rem;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f3ef;
+    }
+    .card {
+      max-width: 1000px;
+      margin: 0 auto 1.5rem;
+      background: #ffffff;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+    }
+    h1 {
+      margin-top: 0;
+    }
+    .subtitle {
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin: .5rem 0 1rem;
+    }
+    .chip {
+      padding: .3rem .7rem;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      background: #f7f6f2;
+      font-size: 0.9rem;
+    }
+
+    /* Guided practice */
+    .gp-question {
+      font-weight: 600;
+      margin-bottom: .5rem;
+    }
+    .gp-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: .75rem;
+    }
+    .gp-option {
+      padding: .5rem .9rem;
+      border-radius: .6rem;
+      border: 1px solid #ccc;
+      background: #faf9f6;
+      cursor: pointer;
+    }
+    .gp-option.correct {
+      background: #d3f4ce;
+      border-color: #5a9a4a;
+    }
+    .gp-option.wrong {
+      background: #fbe0d6;
+      border-color: #c1522c;
+    }
+    .gp-feedback {
+      font-size: 0.9rem;
+      color: #555;
+      min-height: 1.2rem;
+    }
+
+    /* Main game */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .game-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .prompt {
+      font-weight: 600;
+      margin-bottom: .3rem;
+    }
+    .family {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: .75rem;
+    }
+    .output {
+      min-height: 2rem;
+      padding: .5rem .75rem;
+      border-radius: .5rem;
+      background: #f1eee9;
+      margin-bottom: .75rem;
+    }
+    .chips-selectable {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-bottom: 1rem;
+    }
+    .chip-selectable {
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      border: 1px solid #ccc;
+      background: #f7f6f2;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chip-selectable.selected {
+      background: #01696f;
+      color: #fff;
+      border-color: #01696f;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+    button {
+      padding: .5rem .9rem;
+      border-radius: .6rem;
+      border: 1px solid #01696f;
+      background: #01696f;
+      color: #fff;
+      cursor: pointer;
+    }
+    button.secondary {
+      border-color: #aaa;
+      background: #fff;
+      color: #333;
+    }
+    .game-feedback {
+      font-size: 0.9rem;
+      color: #555;
+      min-height: 1.2rem;
+    }
+
+    /* Right column – speaking prompts */
+    .speaking-title {
+      font-weight: 600;
+      margin-bottom: .5rem;
+    }
+    .speaking-list {
+      font-size: 0.9rem;
+      color: #555;
+      padding-left: 1rem;
+    }
+    .speaking-list li {
+      margin-bottom: .2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- INTRO CARD -->
+  <div class="card" id="introCard"></div>
+
+  <!-- GUIDED PRACTICE -->
+  <div class="card">
+    <div class="gp-question" id="gpQuestion"></div>
+    <div class="gp-options" id="gpOptions"></div>
+    <div class="gp-feedback" id="gpFeedback"></div>
+  </div>
+
+  <!-- MAIN GAME -->
+  <div class="card">
+    <div class="game-header">
+      <span id="gameTitle"></span>
+      <span id="gameFunction"></span>
+      <span id="gameRound"></span>
+    </div>
+
+    <div class="game-main">
+      <!-- left: interactive task -->
+      <div>
+        <div class="prompt" id="mainPrompt"></div>
+        <div class="family" id="mainContext"></div>
+
+        <div class="chips-selectable" id="gameChunks"></div>
+        <div class="output" id="gameOutput"></div>
+
+        <div class="controls">
+          <button id="btnCheck">Check</button>
+          <button class="secondary" id="btnClear">Clear</button>
+          <button class="secondary" id="btnNext">Next</button>
+          <button class="secondary" id="btnShow">Show model</button>
+        </div>
+        <div class="game-feedback" id="gameFeedback"></div>
+      </div>
+
+      <!-- right: speaking prompts -->
+      <div>
+        <div class="speaking-title">Speaking prompts</div>
+        <ul class="speaking-list" id="speakingList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========= 1. КОНФИГ: сюда подставляешь ИМЕННО МЕНЯЮЩИЕСЯ ДАННЫЕ ========= */
+
+    // A. Мета‑информация урока
+    const lessonMeta = {
+      // меняешь под конкретную игру
+      title: "Time zones – What's the time?",
+      type: "Type of activity: small groups · information gap",
+      func: "Function: asking and telling the time",
+      exponents: [
+        "What's the time?",
+        "What time is it in ...?",
+        "It's ... (o'clock / half past ...)"
+      ],
+      lexical: "Lexical area: numbers, times; cities (Tokyo, Sydney, London, New York, Rio)",
+      essentialVocab: [
+        "Tokyo", "Sydney", "London", "New York", "Rio",
+        "o'clock", "half past", "quarter to", "quarter past"
+      ]
+    };
+
+    // B. Guided practice задачи (меняешь содержимое массива)
+    const guidedPracticeItems = [
+      {
+        // вопрос
+        question: "It's 4:00 in Sydney. What time is it in London?",
+        // варианты
+        options: ["2:00", "6:00", "10:00"],
+        // индекс правильного варианта
+        correctIndex: 1,
+        // комментарий при верном ответе
+        correctFeedback: "Yes. London is ten hours behind Sydney.",
+        // комментарий при неверном
+        wrongFeedback: "Not quite. Remember: London is ten hours behind Sydney."
+      },
+      {
+        question: "It's 6:00 in Tokyo. What time is it in Sydney?",
+        options: ["5:00", "7:00", "9:00"],
+        correctIndex: 1,
+        correctFeedback: "Right. Sydney is one hour ahead of Tokyo.",
+        wrongFeedback: "Check the rule: Sydney is one hour ahead of Tokyo."
+      }
+      // добавляешь ещё задания по тому же шаблону
+    ];
+
+    // C. Основные игровые карточки для word order (меняешь target/chunks/context)
+    const gameItems = [
+      {
+        // контекст (например, семья или базовое время)
+        context: "Tokyo 6:00; Sydney is one hour ahead; London is ten hours behind Sydney.",
+        // модельный вопрос (что ученики должны собрать)
+        target: "What time is it in London?",
+        // набор «кусочков» в неправильном порядке
+        chunks: ["What", "is it", "London?", "time", "in"]
+      },
+      {
+        context: "Sydney 4:00; London is ten hours behind Sydney.",
+        target: "What time is it in London?",
+        chunks: ["time", "What", "in London?", "is it"]
+      }
+      // для Seven families, Glasses и т.д. тут будут другие target/chunks/context
+    ];
+
+    // D. Спикинг‑подсказки (меняешь на свои)
+    const speakingPrompts = [
+      "Ask your partner: What time is it in Moscow?",
+      "Ask: What time is it in Tokyo / Sydney now?",
+      "Compare two cities: Where is it earlier / later?",
+      "Ask and answer 3 real time questions."
+    ];
+
+    /* ========= 2. РЕНДЕР ИНТРО КАРТОЧКИ ========= */
+    function renderIntro() {
+      const el = document.getElementById("introCard");
+      el.innerHTML = `
+        <h1>${lessonMeta.title}</h1>
+        <div class="subtitle">${lessonMeta.type}</div>
+        <div class="subtitle">${lessonMeta.func}</div>
+        <div><strong>Exponents:</strong> ${lessonMeta.exponents.join("; ")}</div>
+        <div style="margin-top:.4rem;"><strong>Lexical area:</strong> ${lessonMeta.lexical}</div>
+        <div style="margin-top:.5rem;"><strong>Essential vocabulary:</strong></div>
+        <div class="chips">
+          ${lessonMeta.essentialVocab.map(v => `<span class="chip">${v}</span>`).join("")}
+        </div>
+      `;
+    }
+
+    /* ========= 3. GUIDED PRACTICE ЛОГИКА ========= */
+    let gpIndex = 0;
+
+    function renderGuidedPractice() {
+      const item = guidedPracticeItems[gpIndex];
+      document.getElementById("gpQuestion").textContent = item.question;
+      const box = document.getElementById("gpOptions");
+      box.innerHTML = "";
+      const feedback = document.getElementById("gpFeedback");
+      feedback.textContent = "";
+
+      item.options.forEach((opt, i) => {
+        const btn = document.createElement("button");
+        btn.className = "gp-option";
+        btn.textContent = opt;
+        btn.onclick = () => {
+          // очистить стили
+          [...box.querySelectorAll(".gp-option")].forEach(b => {
+            b.classList.remove("correct", "wrong");
+          });
+          if (i === item.correctIndex) {
+            btn.classList.add("correct");
+            feedback.textContent = item.correctFeedback;
+          } else {
+            btn.classList.add("wrong");
+            feedback.textContent = item.wrongFeedback;
+          }
+        };
+        box.appendChild(btn);
+      });
+    }
+
+    /* ========= 4. MAIN GAME – WORD ORDER ЛОГИКА ========= */
+    let gameIndex = 0;
+
+    function renderGame() {
+      const item = gameItems[gameIndex];
+      document.getElementById("gameTitle").textContent = lessonMeta.title;
+      document.getElementById("gameFunction").textContent = lessonMeta.func;
+      document.getElementById("gameRound").textContent =
+        `Round ${gameIndex + 1} of ${gameItems.length}`;
+
+      document.getElementById("mainPrompt").textContent =
+        "Reorder the chunks to make a correct question.";
+      document.getElementById("mainContext").textContent = item.context;
+
+      const chunksBox = document.getElementById("gameChunks");
+      const output = document.getElementById("gameOutput");
+      const feedback = document.getElementById("gameFeedback");
+      chunksBox.innerHTML = "";
+      output.textContent = "";
+      feedback.textContent = "";
+
+      let selected = [];
+
+      item.chunks.forEach(chunk => {
+        const span = document.createElement("span");
+        span.className = "chip-selectable";
+        span.textContent = chunk;
+        span.onclick = () => {
+          if (span.classList.contains("selected")) return;
+          span.classList.add("selected");
+          selected.push(chunk);
+          output.textContent = selected.join(" ");
+          feedback.textContent = "";
+        };
+        chunksBox.appendChild(span);
+      });
+
+      document.getElementById("btnCheck").onclick = () => {
+        const attempt = output.textContent.trim();
+        if (!attempt) {
+          feedback.textContent = "First build your question by clicking the chunks.";
+          return;
+        }
+        if (attempt === item.target) {
+          feedback.textContent = "Correct word order. Now ask and answer this question aloud.";
+        } else {
+          feedback.textContent =
+            "Not quite. Check the position of the wh-word, auxiliary, subject and main verb.";
+        }
+      };
+
+      document.getElementById("btnClear").onclick = () => {
+        selected = [];
+        output.textContent = "";
+        feedback.textContent = "";
+        chunksBox.querySelectorAll(".chip-selectable").forEach(c => {
+          c.classList.remove("selected");
+        });
+      };
+
+      document.getElementById("btnNext").onclick = () => {
+        gameIndex = (gameIndex + 1) % gameItems.length;
+        renderGame();
+      };
+
+      document.getElementById("btnShow").onclick = () => {
+        feedback.textContent = "Model question: " + item.target;
+      };
+    }
+
+    /* ========= 5. СПИКИНГ ПОДСКАЗКИ ========= */
+    function renderSpeaking() {
+      const ul = document.getElementById("speakingList");
+      ul.innerHTML = speakingPrompts
+        .map(p => `<li>${p}</li>`)
+        .join("");
+    }
+
+    /* ========= 6. ИНИЦИАЛИЗАЦИЯ ========= */
+    renderIntro();
+    renderGuidedPractice();
+    renderGame();
+    renderSpeaking();
+  </script>
+</body>
+</html>
