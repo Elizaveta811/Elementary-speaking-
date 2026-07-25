@@ -1,0 +1,9 @@
+<div class="card">
+  <div class="gp-question" id="gpQuestion"></div>
+
+  <!-- новый блок для картинки часов -->
+  <div id="gpClock" style="margin-bottom:.75rem;"></div>
+
+  <div class="gp-options" id="gpOptions"></div>
+  <div class="gp-feedback" id="gpFeedback"></div>
+</div>

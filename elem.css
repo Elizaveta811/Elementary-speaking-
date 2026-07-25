@@ -1,0 +1,26 @@
+.gp-option {
+  padding: .6rem 1.1rem;
+  border-radius: .8rem;
+  border: 1px solid #ccc;
+  background: #faf9f6;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+
+.gp-option:hover {
+  transform: translateY(-1px);
+  border-color: #01696f;
+}
+
+.gp-option.correct {
+  background: #e0f5e0;
+  border-color: #3c8a3c;
+  color: #184218;
+}
+
+.gp-option.wrong {
+  background: #f9d7cf;
+  border-color: #c1522c;
+  color: #5c2416;
+}
